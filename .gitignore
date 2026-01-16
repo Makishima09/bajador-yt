@@ -1,2 +1,32 @@
-
 *.mp3
+*.ogg
+*.flac
+*.m4a
+
+# Logs
+*.log
+download_*.log
+
+# Configuración local
+config.json
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+.venv
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Sistema
+.DS_Store
+Thumbs.db
