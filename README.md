@@ -113,7 +113,7 @@ https://www.youtube.com/watch?v=VIDEO_ID_3
 9. **Opcional: Permitir playlists**
    - Si activas el checkbox, las URLs de playlists descargan todos los videos
 
-![Captura de la interfaz](ImageExample.jpg)
+![Captura de la interfaz](Capture.jpg)
 
 ## ⚙️ Configuración del Script
 
