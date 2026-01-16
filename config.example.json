@@ -1,0 +1,10 @@
+{
+  "output_folder": "./downloads",
+  "csv_file": "./url-list.csv",
+  "audio_quality": "192",
+  "audio_format": "mp3",
+  "ffmpeg_path": null,
+  "skip_existing": true,
+  "max_retries": 3,
+  "parallel_downloads": 1
+}
