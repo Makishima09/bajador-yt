@@ -77,6 +77,8 @@ def build_ydl_options(
     output_folder: str,
     ffmpeg_path: Optional[str],
     allow_playlist: bool,
+    codec: str,
+    quality: str,
 ) -> dict:
     ydl_opts = {
         'format': 'bestaudio/best',
@@ -87,8 +89,8 @@ def build_ydl_options(
         'postprocessors': [
             {
                 'key': 'FFmpegExtractAudio',
-                'preferredcodec': 'mp3',
-                'preferredquality': '192',
+                'preferredcodec': codec,
+                'preferredquality': quality,
             }
         ],
     }
@@ -97,13 +99,25 @@ def build_ydl_options(
     return ydl_opts
 
 
-def get_expected_mp3_path(ydl: yt_dlp.YoutubeDL, link: str) -> Optional[str]:
+def get_expected_audio_path(
+    ydl: yt_dlp.YoutubeDL,
+    link: str,
+    codec: str,
+) -> Optional[str]:
     info = ydl.extract_info(link, download=False)
     if not info:
         return None
     output_path = ydl.prepare_filename(info)
     base, _ = os.path.splitext(output_path)
-    return f'{base}.mp3'
+    return f'{base}.{codec}'
+
+
+def is_supported_codec(codec: str) -> bool:
+    return codec in {'mp3', 'm4a', 'opus', 'wav'}
+
+
+def is_supported_quality(quality: str) -> bool:
+    return quality in {'128', '192', '256', '320'}
 
 
 def download_audio_from_youtube(
@@ -112,6 +126,8 @@ def download_audio_from_youtube(
     ffmpeg_path: Optional[str] = None,
     skip_existing: bool = True,
     allow_playlist: bool = False,
+    codec: str = 'mp3',
+    quality: str = '192',
 ) -> DownloadResult:
     if not link:
         return DownloadResult(url=link, status='invalid', message='URL vacía.')
@@ -119,27 +135,47 @@ def download_audio_from_youtube(
     if not is_valid_youtube_url(link):
         return DownloadResult(url=link, status='invalid', message='URL no válida.')
 
+    if not is_supported_codec(codec):
+        return DownloadResult(
+            url=link,
+            status='invalid',
+            message='Formato no soportado.',
+        )
+
+    if not is_supported_quality(quality):
+        return DownloadResult(
+            url=link,
+            status='invalid',
+            message='Calidad no soportada.',
+        )
+
     ensure_output_folder(output_folder)
     resolved_ffmpeg_path = ffmpeg_path or detect_ffmpeg_path()
-    ydl_opts = build_ydl_options(output_folder, resolved_ffmpeg_path, allow_playlist)
+    ydl_opts = build_ydl_options(
+        output_folder,
+        resolved_ffmpeg_path,
+        allow_playlist,
+        codec,
+        quality,
+    )
 
     try:
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            expected_mp3 = get_expected_mp3_path(ydl, link)
-            if expected_mp3 and skip_existing and os.path.exists(expected_mp3):
+            expected_audio = get_expected_audio_path(ydl, link, codec)
+            if expected_audio and skip_existing and os.path.exists(expected_audio):
                 return DownloadResult(
                     url=link,
                     status='skipped',
                     message='El archivo ya existe.',
-                    output_path=expected_mp3,
+                    output_path=expected_audio,
                 )
             ydl.download([link])
-            if expected_mp3 and os.path.exists(expected_mp3):
+            if expected_audio and os.path.exists(expected_audio):
                 return DownloadResult(
                     url=link,
                     status='success',
                     message='Descarga completada.',
-                    output_path=expected_mp3,
+                    output_path=expected_audio,
                 )
             return DownloadResult(url=link, status='success', message='Descarga completada.')
     except Exception as error:
@@ -151,6 +187,8 @@ def download_from_links(
     output_folder: str,
     progress_callback: Optional[Callable[[DownloadResult, int, int], None]] = None,
     allow_playlist: bool = False,
+    codec: str = 'mp3',
+    quality: str = '192',
 ) -> List[DownloadResult]:
     ensure_output_folder(output_folder)
     results: List[DownloadResult] = []
@@ -164,6 +202,8 @@ def download_from_links(
             link,
             output_folder,
             allow_playlist=allow_playlist,
+            codec=codec,
+            quality=quality,
         )
         results.append(result)
         print(result.message)

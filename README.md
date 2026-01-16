@@ -91,11 +91,15 @@ https://www.youtube.com/watch?v=VIDEO_ID_3
    - Por defecto: `./downloads`
    - Puedes usar el botón **Examinar** para seleccionar una carpeta
 
-4. **Haz clic en "Descargar MP3":**
+4. **Elige formato y calidad:**
+   - Formatos: `mp3`, `m4a`, `opus`, `wav`
+   - Calidades: `128`, `192`, `256`, `320`
+
+5. **Haz clic en "Descargar audio":**
    - Verás el estado por URL en la lista
    - El progreso se mostrará en la parte inferior
 
-5. **Opcional: Permitir playlists**
+6. **Opcional: Permitir playlists**
    - Si activas el checkbox, las URLs de playlists descargan todos los videos
 
 ![Captura de la interfaz](ImageExample.jpg)

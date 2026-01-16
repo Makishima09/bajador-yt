@@ -28,6 +28,8 @@ def handle_download() -> None:
     urls_text = urls_textbox.get('1.0', tk.END)
     output_folder = output_folder_var.get().strip()
     allow_playlist = allow_playlist_var.get()
+    audio_format = format_var.get()
+    audio_quality = quality_var.get()
 
     links = extract_links_from_text(urls_text)
     if not links:
@@ -47,6 +49,8 @@ def handle_download() -> None:
         output_folder,
         progress_callback=handle_progress,
         allow_playlist=allow_playlist,
+        codec=audio_format,
+        quality=audio_quality,
     )
 
     total = len(results)
@@ -116,9 +120,35 @@ allow_playlist_check = tk.Checkbutton(
 )
 allow_playlist_check.pack(anchor='w')
 
+format_label = tk.Label(options_frame, text='Formato:')
+format_label.pack(side='left', padx=(0, 6))
+
+format_var = tk.StringVar(value='mp3')
+format_select = ttk.Combobox(
+    options_frame,
+    textvariable=format_var,
+    values=('mp3', 'm4a', 'opus', 'wav'),
+    state='readonly',
+    width=8,
+)
+format_select.pack(side='left', padx=(0, 16))
+
+quality_label = tk.Label(options_frame, text='Calidad:')
+quality_label.pack(side='left', padx=(0, 6))
+
+quality_var = tk.StringVar(value='192')
+quality_select = ttk.Combobox(
+    options_frame,
+    textvariable=quality_var,
+    values=('128', '192', '256', '320'),
+    state='readonly',
+    width=8,
+)
+quality_select.pack(side='left')
+
 download_button = tk.Button(
     root,
-    text='Descargar MP3',
+    text='Descargar audio',
     command=handle_download,
     width=20,
 )
