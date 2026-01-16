@@ -1,170 +1,55 @@
-# Bajador YouTube - Descargador de Audio Automatizado
+# Bajador de YouTube - Descargador de Audio
 
-Script Python para descargar automáticamente audio de videos de YouTube desde una lista de URLs en formato CSV. Convierte automáticamente el audio a formato MP3 con calidad de 192 kbps.
+Script de Python que automatiza la descarga de audio desde videos de YouTube. Lee una lista de URLs desde un archivo CSV y descarga el audio de cada video en formato MP3.
 
 ## 📋 Descripción
 
-Este proyecto permite descargar múltiples audios de YouTube de forma automatizada. Simplemente agrega las URLs de los videos que deseas descargar en un archivo CSV y el script se encargará de descargarlos y convertirlos a MP3.
+Este script permite descargar el audio de múltiples videos de YouTube de forma automatizada. Lee las URLs desde un archivo CSV y descarga cada video como archivo MP3 con calidad de 192 kbps en la carpeta `downloads`.
 
-## 🚀 Características
+## 🔧 Requisitos Previos
 
-- ✅ Descarga automática de audio desde múltiples URLs de YouTube
-- ✅ Lectura de URLs desde archivo CSV
-- ✅ Conversión automática a formato MP3
-- ✅ Calidad de audio configurable (192 kbps por defecto)
-- ✅ Procesamiento por lotes de múltiples videos
-- ✅ Uso de `yt-dlp` (alternativa mejorada a youtube-dl)
-- ✅ **Versión mejorada disponible** con manejo de errores, CLI y mejor feedback
+Antes de usar este script, necesitas tener instalado:
+
+1. **Python 3.6 o superior**
+   - Verifica tu versión: `python --version`
+
+2. **FFmpeg**
+   - El script detecta FFmpeg automáticamente (PATH o rutas comunes).
+   - Opcional: define `FFMPEG_PATH` si tu instalación no está en el PATH.
+   - Descarga FFmpeg desde: https://ffmpeg.org/download.html
+
+3. **Librerías de Python**
+   - `yt-dlp`: Para descargar videos de YouTube
+   - `csv`: Incluida por defecto en Python
+
+## 📦 Instalación
+
+1. **Clona o descarga este repositorio**
+
+2. **Instala las dependencias necesarias:**
+   ```bash
+   pip install yt-dlp
+   ```
+
+3. **Verifica que FFmpeg esté instalado y accesible:**
+   - Si no se detecta automáticamente, define la variable:
+   ```bash
+   set FFMPEG_PATH=C:\ruta\a\ffmpeg\bin\ffmpeg.exe
+   ```
 
 ## 📁 Estructura del Proyecto
 
 ```
 bajador-yt/
-├── bajador-yt.py              # Script original (simple)
-├── bajador-yt-mejorado.py     # Script mejorado (recomendado)
-├── url-list.csv               # Archivo CSV con las URLs de YouTube
-├── requirements.txt           # Dependencias del proyecto
-├── config.example.json        # Plantilla de configuración
-├── .gitignore                 # Archivos a ignorar en Git
-├── MEJORAS.md                 # Documentación de mejoras
-└── downloads/                 # Carpeta donde se guardan los archivos descargados
+├── bajador-yt.py      # Script principal
+├── url-list.csv       # Archivo CSV con las URLs de YouTube
+├── downloads/         # Carpeta donde se guardan los archivos descargados
+└── README.md          # Este archivo
 ```
 
-## 🛠️ Tecnologías Utilizadas
+## 📝 Configuración del Archivo CSV
 
-- **Python 3**: Lenguaje de programación
-- **yt-dlp**: Biblioteca para descargar videos de YouTube y otras plataformas
-- **FFmpeg**: Herramienta para conversión de audio a MP3
-- **tqdm**: Barra de progreso visual (versión mejorada)
-- **CSV**: Formato para almacenar la lista de URLs
-
-## 📦 Requisitos Previos
-
-### 1. Instalar Python 3
-
-Asegúrate de tener Python 3 instalado en tu sistema.
-
-### 2. Instalar FFmpeg
-
-FFmpeg es necesario para la conversión de audio a MP3.
-
-**Windows:**
-- Descarga FFmpeg desde: https://ffmpeg.org/download.html
-- Extrae el archivo y agrega la ruta `bin` al PATH del sistema
-- O actualiza la ruta en el script: `'ffmpeg_location': 'C:/ruta/a/ffmpeg/bin'`
-
-**Linux:**
-```bash
-sudo apt update
-sudo apt install ffmpeg
-```
-
-**macOS:**
-```bash
-brew install ffmpeg
-```
-
-### 3. Instalar Dependencias de Python
-
-```bash
-pip install -r requirements.txt
-```
-
-O manualmente:
-```bash
-pip install yt-dlp tqdm
-```
-
-## 🚀 Instalación
-
-1. Clona el repositorio:
-```bash
-git clone https://github.com/Makishima09/bajador-yt.git
-cd bajador-yt
-```
-
-2. Instala las dependencias:
-```bash
-pip install -r requirements.txt
-```
-
-3. Configura FFmpeg (ver sección de Requisitos Previos)
-
-4. La carpeta de descargas se crea automáticamente, pero puedes crearla manualmente:
-```bash
-mkdir downloads
-```
-
-## 📝 Uso
-
-### Versión Mejorada (Recomendada) ⭐
-
-La versión mejorada incluye manejo de errores robusto, CLI con argumentos, detección automática de FFmpeg, validación de URLs, barra de progreso y mucho más.
-
-#### Uso Básico
-
-```bash
-python bajador-yt-mejorado.py
-```
-
-#### Con Argumentos Personalizados
-
-```bash
-# Especificar archivo CSV y carpeta de salida
-python bajador-yt-mejorado.py --csv urls.csv --output ./music
-
-# Cambiar calidad de audio
-python bajador-yt-mejorado.py --quality 320
-
-# Cambiar formato de audio
-python bajador-yt-mejorado.py --format ogg
-
-# Especificar ruta de FFmpeg manualmente
-python bajador-yt-mejorado.py --ffmpeg "C:/Program Files/ffmpeg/bin"
-
-# No saltar archivos existentes
-python bajador-yt-mejorado.py --no-skip
-```
-
-#### Con Archivo de Configuración
-
-1. Copia el archivo de ejemplo:
-```bash
-cp config.example.json config.json
-```
-
-2. Edita `config.json` con tus preferencias
-
-3. Ejecuta con la configuración:
-```bash
-python bajador-yt-mejorado.py --config config.json
-```
-
-#### Características de la Versión Mejorada
-
-- ✅ **Detección automática de FFmpeg**: Busca FFmpeg en PATH y ubicaciones comunes
-- ✅ **Validación de URLs**: Verifica que las URLs sean válidas antes de descargar
-- ✅ **Verificación de archivos existentes**: Evita descargar duplicados
-- ✅ **Barra de progreso visual**: Muestra el progreso de las descargas
-- ✅ **Logging estructurado**: Guarda logs en archivo `download.log`
-- ✅ **Resumen de estadísticas**: Muestra resumen al final (éxitos/fallos/saltados)
-- ✅ **Manejo de errores robusto**: Captura y maneja errores específicos
-- ✅ **Sanitización de nombres**: Limpia caracteres inválidos en nombres de archivo
-- ✅ **CLI flexible**: Argumentos de línea de comandos para personalización
-
-### Versión Original (Simple)
-
-Para uso básico sin características adicionales:
-
-```bash
-python bajador-yt.py
-```
-
-**Nota**: Necesitarás editar el script para cambiar la ruta de FFmpeg si no está en tu PATH.
-
-## 📂 Preparar el Archivo CSV
-
-Edita el archivo `url-list.csv` y agrega las URLs de YouTube que deseas descargar:
+El archivo `url-list.csv` debe tener el siguiente formato:
 
 ```csv
 link
@@ -173,142 +58,126 @@ https://www.youtube.com/watch?v=VIDEO_ID_2
 https://www.youtube.com/watch?v=VIDEO_ID_3
 ```
 
-- Primera fila: encabezado con `link`
-- Filas siguientes: una URL por línea
+**Importante:**
+- La primera fila debe contener el encabezado `link`
+- Cada URL debe estar en una nueva línea
+- Las URLs deben ser válidas de YouTube
 
-## ⚙️ Configuración
+## 🚀 Uso (CLI con CSV)
 
-### Versión Mejorada
+1. **Prepara tu archivo CSV:**
+   - Edita `url-list.csv` y agrega las URLs de los videos que deseas descargar
 
-Puedes configurar el script de tres formas:
+2. **Ejecuta el script:**
+   ```bash
+   python bajador-yt.py
+   ```
 
-1. **Argumentos de línea de comandos** (más flexible)
-2. **Archivo de configuración JSON** (para configuraciones persistentes)
-3. **Valores por defecto** (si no especificas nada)
+3. **Espera a que termine:**
+   - El script mostrará el progreso de cada descarga
+   - Los archivos MP3 se guardarán en la carpeta `downloads/`
 
-### Versión Original
+## 🖥️ Uso (Interfaz Gráfica)
 
-Puedes personalizar el script modificando las opciones en `ydl_opts`:
+1. **Ejecuta la interfaz:**
+   ```bash
+   python app.py
+   ```
 
+2. **Pega una o varias URLs:**
+   - Una URL por línea
+
+3. **Define la carpeta de salida:**
+   - Por defecto: `./downloads`
+   - Puedes usar el botón **Examinar** para seleccionar una carpeta
+
+4. **Elige formato y calidad:**
+   - Formatos: `mp3`, `m4a`, `opus`, `wav`
+   - Calidades: `128`, `192`, `256`, `320`
+
+5. **Haz clic en "Descargar audio":**
+   - Verás el estado por URL en la lista
+   - El progreso se mostrará en la parte inferior
+
+6. **Opcional: Permitir playlists**
+   - Si activas el checkbox, las URLs de playlists descargan todos los videos
+
+![Captura de la interfaz](ImageExample.jpg)
+
+## ⚙️ Configuración del Script
+
+Puedes modificar las siguientes opciones en el script:
+
+### Cambiar la carpeta de descarga:
 ```python
-ydl_opts = {
-    'format': 'bestaudio/best',           # Formato de audio
-    'outtmpl': f'{output_folder}/%(title)s.%(ext)s',  # Plantilla de nombre
-    'ffmpeg_location': 'ruta/a/ffmpeg',   # Ruta a FFmpeg
-    'postprocessors': [{
-        'key': 'FFmpegExtractAudio',
-        'preferredcodec': 'mp3',          # Formato de salida
-        'preferredquality': '192',        # Calidad (192, 256, 320)
-    }],
-}
+output_folder = './downloads'  # Línea 45
 ```
 
-### Opciones de Calidad
+### Cambiar la calidad del audio:
+```python
+'preferredquality': '192',  # Línea 29
+# Opciones comunes: '128', '192', '256', '320'
+```
 
-- `'128'`: Calidad básica
-- `'192'`: Calidad estándar (por defecto)
-- `'256'`: Calidad mejorada
-- `'320'`: Calidad máxima
+### Cambiar el formato de salida:
+```python
+'preferredcodec': 'mp3',  # Línea 28
+# También puedes usar: 'm4a', 'opus', 'wav', etc.
+```
 
-### Formatos de Audio Soportados
+### Cambiar la ubicación de FFmpeg:
+```bash
+set FFMPEG_PATH=C:\ruta\a\ffmpeg\bin\ffmpeg.exe
+```
 
-- `mp3`: Formato más compatible (por defecto)
-- `ogg`: Formato libre y eficiente
-- `flac`: Formato sin pérdida (archivos más grandes)
+## 📤 Resultado
 
-## 🔧 Solución de Problemas
+Después de ejecutar el script, encontrarás los archivos descargados en la carpeta `downloads/` con el siguiente formato:
+- Nombre del archivo: `[Título del Video].mp3`
+- Formato: MP3
+- Calidad: 192 kbps
+
+## ⚠️ Notas Importantes
+
+1. **Respeto a los derechos de autor:**
+   - Solo descarga contenido que tengas permiso para descargar
+   - Respeta los términos de servicio de YouTube
+
+2. **Límites de YouTube:**
+   - YouTube puede limitar las descargas si se realizan muchas en poco tiempo
+   - Si encuentras errores, espera unos minutos antes de intentar nuevamente
+
+3. **Espacios en nombres de archivo:**
+   - Los nombres se limpian automáticamente para evitar caracteres inválidos
+
+4. **Archivos existentes:**
+   - Si el MP3 ya existe, se omite la descarga
+
+5. **FFmpeg requerido:**
+   - El script necesita FFmpeg para convertir el audio a MP3
+   - Asegúrate de tener FFmpeg instalado y configurado correctamente
+
+## 🐛 Solución de Problemas
 
 ### Error: "FFmpeg not found"
+- Verifica que FFmpeg esté instalado
+- Actualiza la ruta en la línea 25 del script
 
-**Versión Mejorada**: El script intenta detectar FFmpeg automáticamente. Si no lo encuentra:
-- Asegúrate de que FFmpeg está instalado
-- Usa el argumento `--ffmpeg` para especificar la ruta manualmente
-- Verifica que FFmpeg está en tu PATH del sistema
+### Error: "No module named 'yt_dlp'"
+- Instala la librería: `pip install yt-dlp`
 
-**Versión Original**: 
-- Edita `bajador-yt.py` y actualiza la ruta: `'ffmpeg_location': 'C:/ruta/a/ffmpeg/bin'`
-- En Windows, usa barras `/` o dobles barras `\\`
+### Error: "FileNotFoundError: url-list.csv"
+- Asegúrate de que el archivo `url-list.csv` exista en la misma carpeta que el script
 
-### Error: "ModuleNotFoundError: No module named 'yt_dlp'"
-
-```bash
-pip install -r requirements.txt
-```
-
-O manualmente:
-```bash
-pip install yt-dlp tqdm
-```
-
-### Error: "No video formats found"
-
+### Las descargas fallan
 - Verifica que las URLs sean válidas
-- Algunos videos pueden tener restricciones geográficas o de privacidad
-- Intenta actualizar yt-dlp: `pip install --upgrade yt-dlp`
-
-### Los archivos no se descargan
-
-- Verifica que la carpeta `downloads` existe o puede ser creada
-- Verifica los permisos de escritura en el directorio
-- Revisa que las URLs en el CSV sean correctas
-- Revisa el archivo `download.log` para más detalles (versión mejorada)
-
-## 📝 Notas Importantes
-
-- ⚠️ **Respeto a los derechos de autor**: Solo descarga contenido que tengas permiso para descargar
-- ⚠️ **Términos de servicio**: Asegúrate de cumplir con los términos de servicio de YouTube
-- 🔄 **Actualización de yt-dlp**: YouTube cambia frecuentemente, actualiza yt-dlp regularmente:
-  ```bash
-  pip install --upgrade yt-dlp
-  ```
-- 📊 **Logs**: La versión mejorada guarda logs en `download.log` para facilitar el debugging
-
-## 🔮 Mejoras Futuras
-
-Consulta el archivo [MEJORAS.md](MEJORAS.md) para ver todas las mejoras sugeridas y futuras implementaciones.
-
-Algunas mejoras ya implementadas en la versión mejorada:
-- ✅ Manejo de errores robusto
-- ✅ CLI con argumentos
-- ✅ Detección automática de FFmpeg
-- ✅ Validación de URLs
-- ✅ Barra de progreso
-- ✅ Logging estructurado
-- ✅ Verificación de archivos existentes
-
-Mejoras pendientes:
-- [ ] Interfaz gráfica (GUI)
-- [ ] Soporte para otras plataformas (Vimeo, etc.)
-- [ ] Descarga de video completo además de audio
-- [ ] Descarga paralela (multithreading)
-- [ ] Soporte para playlists de YouTube
-
-## 🤝 Contribuciones
-
-Las contribuciones son bienvenidas. Si deseas mejorar este proyecto:
-
-1. Haz un fork del repositorio
-2. Crea una rama para tu feature (`git checkout -b feature/AmazingFeature`)
-3. Commit tus cambios (`git commit -m 'Add some AmazingFeature'`)
-4. Push a la rama (`git push origin feature/AmazingFeature`)
-5. Abre un Pull Request
+- Comprueba tu conexión a internet
+- Algunos videos pueden tener restricciones de descarga
 
 ## 📄 Licencia
 
-Este proyecto es de código abierto y está disponible para uso educativo y personal.
+Este script es de uso personal. Úsalo de manera responsable y respetando los términos de servicio de YouTube.
 
-## 👤 Autor
+## 🤝 Contribuciones
 
-**Makishima09**
-
-- GitHub: [@Makishima09](https://github.com/Makishima09)
-
-## 🙏 Agradecimientos
-
-- A los desarrolladores de [yt-dlp](https://github.com/yt-dlp/yt-dlp)
-- A la comunidad de Python
-- A los desarrolladores de [tqdm](https://github.com/tqdm/tqdm) por la barra de progreso
-
----
-
-⭐ Si este proyecto te resulta útil, ¡no olvides darle una estrella!
+Si encuentras algún problema o tienes sugerencias de mejora, siéntete libre de contribuir al proyecto.
