@@ -20,7 +20,7 @@ env/
 venv/
 ENV/
 .venv
-.pyc
+*/.pyc
 
 # IDE
 .vscode/
