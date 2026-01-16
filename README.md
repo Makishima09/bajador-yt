@@ -14,8 +14,8 @@ Antes de usar este script, necesitas tener instalado:
    - Verifica tu versión: `python --version`
 
 2. **FFmpeg**
-   - El script está configurado para usar FFmpeg desde: `C:/Program Files/ffmpeg-7.0.2-full_build/bin`
-   - Si tienes FFmpeg en otra ubicación, modifica la línea 25 en `bajador-yt.py`
+   - El script detecta FFmpeg automáticamente (PATH o rutas comunes).
+   - Opcional: define `FFMPEG_PATH` si tu instalación no está en el PATH.
    - Descarga FFmpeg desde: https://ffmpeg.org/download.html
 
 3. **Librerías de Python**
@@ -32,9 +32,9 @@ Antes de usar este script, necesitas tener instalado:
    ```
 
 3. **Verifica que FFmpeg esté instalado y accesible:**
-   - Si FFmpeg está en otra ubicación, edita la línea 25 del script:
-   ```python
-   'ffmpeg_location': 'ruta/a/tu/ffmpeg/bin',
+   - Si no se detecta automáticamente, define la variable:
+   ```bash
+   set FFMPEG_PATH=C:\ruta\a\ffmpeg\bin\ffmpeg.exe
    ```
 
 ## 📁 Estructura del Proyecto
@@ -89,9 +89,16 @@ https://www.youtube.com/watch?v=VIDEO_ID_3
 
 3. **Define la carpeta de salida:**
    - Por defecto: `./downloads`
+   - Puedes usar el botón **Examinar** para seleccionar una carpeta
 
 4. **Haz clic en "Descargar MP3":**
+   - Verás el estado por URL en la lista
    - El progreso se mostrará en la parte inferior
+
+5. **Opcional: Permitir playlists**
+   - Si activas el checkbox, las URLs de playlists descargan todos los videos
+
+![Captura de la interfaz](ImageExample.jpg)
 
 ## ⚙️ Configuración del Script
 
@@ -115,8 +122,8 @@ output_folder = './downloads'  # Línea 45
 ```
 
 ### Cambiar la ubicación de FFmpeg:
-```python
-'ffmpeg_location': 'C:/Program Files/ffmpeg-7.0.2-full_build/bin',  # Línea 25
+```bash
+set FFMPEG_PATH=C:\ruta\a\ffmpeg\bin\ffmpeg.exe
 ```
 
 ## 📤 Resultado
@@ -137,10 +144,12 @@ Después de ejecutar el script, encontrarás los archivos descargados en la carp
    - Si encuentras errores, espera unos minutos antes de intentar nuevamente
 
 3. **Espacios en nombres de archivo:**
-   - Los nombres de archivo se generan automáticamente desde el título del video
-   - Algunos caracteres especiales pueden ser reemplazados
+   - Los nombres se limpian automáticamente para evitar caracteres inválidos
 
-4. **FFmpeg requerido:**
+4. **Archivos existentes:**
+   - Si el MP3 ya existe, se omite la descarga
+
+5. **FFmpeg requerido:**
    - El script necesita FFmpeg para convertir el audio a MP3
    - Asegúrate de tener FFmpeg instalado y configurado correctamente
 
