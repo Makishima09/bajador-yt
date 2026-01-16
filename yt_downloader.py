@@ -7,6 +7,19 @@ from urllib.parse import urlparse
 
 import yt_dlp
 
+AUDIO_FORMATS = {'mp3', 'm4a', 'opus', 'wav'}
+VIDEO_FORMATS = {'mp4', 'mkv', 'webm'}
+QUALITY_LEVELS = {'128', '192', '256', '320'}
+MODES = {'audio', 'video'}
+
+
+@dataclass(frozen=True)
+class DownloadResult:
+    url: str
+    status: str
+    message: str
+    output_path: Optional[str] = None
+
 
 def extract_links_from_csv(csv_file: str) -> List[str]:
     links: List[str] = []
@@ -30,13 +43,6 @@ def ensure_output_folder(output_folder: str) -> None:
     if not output_folder:
         return
     os.makedirs(output_folder, exist_ok=True)
-
-@dataclass(frozen=True)
-class DownloadResult:
-    url: str
-    status: str
-    message: str
-    output_path: Optional[str] = None
 
 
 def is_valid_youtube_url(url: str) -> bool:
@@ -73,61 +79,81 @@ def detect_ffmpeg_path() -> Optional[str]:
     return None
 
 
+def is_supported_mode(mode: str) -> bool:
+    return mode in MODES
+
+
+def is_supported_audio_format(audio_format: str) -> bool:
+    return audio_format in AUDIO_FORMATS
+
+
+def is_supported_video_format(video_format: str) -> bool:
+    return video_format in VIDEO_FORMATS
+
+
+def is_supported_quality(quality: str) -> bool:
+    return quality in QUALITY_LEVELS
+
+
 def build_ydl_options(
     output_folder: str,
     ffmpeg_path: Optional[str],
     allow_playlist: bool,
-    codec: str,
-    quality: str,
+    mode: str,
+    audio_format: str,
+    audio_quality: str,
+    video_format: str,
 ) -> dict:
     ydl_opts = {
-        'format': 'bestaudio/best',
+        'format': 'bestaudio/best' if mode == 'audio' else 'bestvideo+bestaudio/best',
         'outtmpl': f'{output_folder}/%(title)s.%(ext)s',
         'noplaylist': not allow_playlist,
         'restrictfilenames': True,
         'nooverwrites': True,
-        'postprocessors': [
+    }
+    if mode == 'audio':
+        ydl_opts['postprocessors'] = [
             {
                 'key': 'FFmpegExtractAudio',
-                'preferredcodec': codec,
-                'preferredquality': quality,
+                'preferredcodec': audio_format,
+                'preferredquality': audio_quality,
             }
-        ],
-    }
+        ]
+    else:
+        ydl_opts['merge_output_format'] = video_format
+
     if ffmpeg_path:
         ydl_opts['ffmpeg_location'] = ffmpeg_path
+
     return ydl_opts
 
 
-def get_expected_audio_path(
+def get_expected_output_path(
     ydl: yt_dlp.YoutubeDL,
     link: str,
-    codec: str,
+    mode: str,
+    audio_format: str,
+    video_format: str,
 ) -> Optional[str]:
     info = ydl.extract_info(link, download=False)
     if not info:
         return None
     output_path = ydl.prepare_filename(info)
     base, _ = os.path.splitext(output_path)
-    return f'{base}.{codec}'
+    extension = audio_format if mode == 'audio' else video_format
+    return f'{base}.{extension}'
 
 
-def is_supported_codec(codec: str) -> bool:
-    return codec in {'mp3', 'm4a', 'opus', 'wav'}
-
-
-def is_supported_quality(quality: str) -> bool:
-    return quality in {'128', '192', '256', '320'}
-
-
-def download_audio_from_youtube(
+def download_media_from_youtube(
     link: str,
     output_folder: str,
     ffmpeg_path: Optional[str] = None,
     skip_existing: bool = True,
     allow_playlist: bool = False,
-    codec: str = 'mp3',
-    quality: str = '192',
+    mode: str = 'audio',
+    audio_format: str = 'mp3',
+    audio_quality: str = '192',
+    video_format: str = 'mp4',
 ) -> DownloadResult:
     if not link:
         return DownloadResult(url=link, status='invalid', message='URL vacía.')
@@ -135,19 +161,17 @@ def download_audio_from_youtube(
     if not is_valid_youtube_url(link):
         return DownloadResult(url=link, status='invalid', message='URL no válida.')
 
-    if not is_supported_codec(codec):
-        return DownloadResult(
-            url=link,
-            status='invalid',
-            message='Formato no soportado.',
-        )
+    if not is_supported_mode(mode):
+        return DownloadResult(url=link, status='invalid', message='Modo no soportado.')
 
-    if not is_supported_quality(quality):
-        return DownloadResult(
-            url=link,
-            status='invalid',
-            message='Calidad no soportada.',
-        )
+    if mode == 'audio' and not is_supported_audio_format(audio_format):
+        return DownloadResult(url=link, status='invalid', message='Formato de audio no soportado.')
+
+    if mode == 'audio' and not is_supported_quality(audio_quality):
+        return DownloadResult(url=link, status='invalid', message='Calidad no soportada.')
+
+    if mode == 'video' and not is_supported_video_format(video_format):
+        return DownloadResult(url=link, status='invalid', message='Formato de video no soportado.')
 
     ensure_output_folder(output_folder)
     resolved_ffmpeg_path = ffmpeg_path or detect_ffmpeg_path()
@@ -155,27 +179,35 @@ def download_audio_from_youtube(
         output_folder,
         resolved_ffmpeg_path,
         allow_playlist,
-        codec,
-        quality,
+        mode,
+        audio_format,
+        audio_quality,
+        video_format,
     )
 
     try:
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            expected_audio = get_expected_audio_path(ydl, link, codec)
-            if expected_audio and skip_existing and os.path.exists(expected_audio):
+            expected_output = get_expected_output_path(
+                ydl,
+                link,
+                mode,
+                audio_format,
+                video_format,
+            )
+            if expected_output and skip_existing and os.path.exists(expected_output):
                 return DownloadResult(
                     url=link,
                     status='skipped',
                     message='El archivo ya existe.',
-                    output_path=expected_audio,
+                    output_path=expected_output,
                 )
             ydl.download([link])
-            if expected_audio and os.path.exists(expected_audio):
+            if expected_output and os.path.exists(expected_output):
                 return DownloadResult(
                     url=link,
                     status='success',
                     message='Descarga completada.',
-                    output_path=expected_audio,
+                    output_path=expected_output,
                 )
             return DownloadResult(url=link, status='success', message='Descarga completada.')
     except Exception as error:
@@ -187,8 +219,11 @@ def download_from_links(
     output_folder: str,
     progress_callback: Optional[Callable[[DownloadResult, int, int], None]] = None,
     allow_playlist: bool = False,
-    codec: str = 'mp3',
-    quality: str = '192',
+    mode: str = 'audio',
+    audio_format: str = 'mp3',
+    audio_quality: str = '192',
+    video_format: str = 'mp4',
+    ffmpeg_path: Optional[str] = None,
 ) -> List[DownloadResult]:
     ensure_output_folder(output_folder)
     results: List[DownloadResult] = []
@@ -197,13 +232,16 @@ def download_from_links(
     for index, link in enumerate(links_list, start=1):
         if not link:
             continue
-        print(f'Downloading audio from: {link}')
-        result = download_audio_from_youtube(
+        print(f'Downloading from: {link}')
+        result = download_media_from_youtube(
             link,
             output_folder,
+            ffmpeg_path=ffmpeg_path,
             allow_playlist=allow_playlist,
-            codec=codec,
-            quality=quality,
+            mode=mode,
+            audio_format=audio_format,
+            audio_quality=audio_quality,
+            video_format=video_format,
         )
         results.append(result)
         print(result.message)

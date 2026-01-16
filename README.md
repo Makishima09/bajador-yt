@@ -1,10 +1,10 @@
-# Bajador de YouTube - Descargador de Audio
+# Bajador de YouTube - Descargador de Audio y Video
 
-Script de Python que automatiza la descarga de audio desde videos de YouTube. Lee una lista de URLs desde un archivo CSV y descarga el audio de cada video en formato MP3.
+Script de Python que automatiza la descarga de audio o video desde YouTube. Lee una lista de URLs desde un archivo CSV o desde la UI y descarga en los formatos seleccionados.
 
 ## 📋 Descripción
 
-Este script permite descargar el audio de múltiples videos de YouTube de forma automatizada. Lee las URLs desde un archivo CSV y descarga cada video como archivo MP3 con calidad de 192 kbps en la carpeta `downloads`.
+Este script permite descargar audio o video de múltiples URLs de YouTube de forma automatizada. Puedes usar CSV o una interfaz gráfica para elegir formato, calidad y carpeta de salida.
 
 ## 🔧 Requisitos Previos
 
@@ -42,6 +42,8 @@ Antes de usar este script, necesitas tener instalado:
 ```
 bajador-yt/
 ├── bajador-yt.py      # Script principal
+├── app.py             # Interfaz gráfica
+├── yt_downloader.py   # Lógica de descarga
 ├── url-list.csv       # Archivo CSV con las URLs de YouTube
 ├── downloads/         # Carpeta donde se guardan los archivos descargados
 └── README.md          # Este archivo
@@ -75,7 +77,7 @@ https://www.youtube.com/watch?v=VIDEO_ID_3
 
 3. **Espera a que termine:**
    - El script mostrará el progreso de cada descarga
-   - Los archivos MP3 se guardarán en la carpeta `downloads/`
+   - Los archivos se guardarán en la carpeta `downloads/`
 
 ## 🖥️ Uso (Interfaz Gráfica)
 
@@ -91,15 +93,24 @@ https://www.youtube.com/watch?v=VIDEO_ID_3
    - Por defecto: `./downloads`
    - Puedes usar el botón **Examinar** para seleccionar una carpeta
 
-4. **Elige formato y calidad:**
+4. **Elige tipo de descarga:**
+   - `audio` o `video`
+
+5. **Si eliges audio, define formato y calidad:**
    - Formatos: `mp3`, `m4a`, `opus`, `wav`
    - Calidades: `128`, `192`, `256`, `320`
 
-5. **Haz clic en "Descargar audio":**
+6. **Si eliges video, define formato:**
+   - Formatos: `mp4`, `mkv`, `webm`
+
+7. **Opcional: FFmpeg**
+   - Puedes indicar la ruta al ejecutable `ffmpeg.exe`
+
+8. **Haz clic en "Descargar":**
    - Verás el estado por URL en la lista
    - El progreso se mostrará en la parte inferior
 
-6. **Opcional: Permitir playlists**
+9. **Opcional: Permitir playlists**
    - Si activas el checkbox, las URLs de playlists descargan todos los videos
 
 ![Captura de la interfaz](ImageExample.jpg)
@@ -132,10 +143,9 @@ set FFMPEG_PATH=C:\ruta\a\ffmpeg\bin\ffmpeg.exe
 
 ## 📤 Resultado
 
-Después de ejecutar el script, encontrarás los archivos descargados en la carpeta `downloads/` con el siguiente formato:
-- Nombre del archivo: `[Título del Video].mp3`
-- Formato: MP3
-- Calidad: 192 kbps
+Después de ejecutar el script, encontrarás los archivos descargados en la carpeta `downloads/`:
+- Audio: `[Título del Video].mp3` (o el formato elegido)
+- Video: `[Título del Video].mp4` (o el formato elegido)
 
 ## ⚠️ Notas Importantes
 
@@ -151,7 +161,7 @@ Después de ejecutar el script, encontrarás los archivos descargados en la carp
    - Los nombres se limpian automáticamente para evitar caracteres inválidos
 
 4. **Archivos existentes:**
-   - Si el MP3 ya existe, se omite la descarga
+   - Si el archivo ya existe, se omite la descarga
 
 5. **FFmpeg requerido:**
    - El script necesita FFmpeg para convertir el audio a MP3
