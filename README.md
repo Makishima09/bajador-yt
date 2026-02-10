@@ -176,6 +176,23 @@ Después de ejecutar el script, encontrarás los archivos descargados en la carp
 ### Error: "No module named 'yt_dlp'"
 - Instala la librería: `pip install yt-dlp`
 
+### Errores 403 en YouTube o aviso de runtime JS
+- Mensajes típicos:
+  - `HTTP Error 403: Forbidden`
+  - `No supported JavaScript runtime could be found`
+- Causas habituales:
+  - Cambios internos de YouTube en cómo sirven el audio/video.
+  - Falta de un runtime de JavaScript soportado (Node, Deno, etc.).
+  - `yt-dlp` desactualizado.
+- Pasos recomendados:
+  1. Actualiza `yt-dlp`:
+     ```bash
+     pip install -U yt-dlp
+     ```
+  2. Instala **Node.js** (o Deno) y añádelo al `PATH`.
+  3. Vuelve a intentar la descarga; si el problema persiste, consulta la wiki de `yt-dlp`:
+     `https://github.com/yt-dlp/yt-dlp/wiki/EJS`
+
 ### Error: "FileNotFoundError: url-list.csv"
 - Asegúrate de que el archivo `url-list.csv` exista en la misma carpeta que el script
 
