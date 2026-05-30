@@ -1,210 +1,262 @@
-# Bajador de YouTube - Descargador de Audio y Video
+# Bajador YT
 
-Script de Python que automatiza la descarga de audio o video desde YouTube. Lee una lista de URLs desde un archivo CSV o desde la UI y descarga en los formatos seleccionados.
+Descarga audio o video desde YouTube con yt-dlp. Dos interfaces: **CLI** (con `argparse`, logging y barra de progreso) e **interfaz gráfica Tkinter** (con hilo de descarga y botón cancelar).
 
-## 📋 Descripción
+## Características
 
-Este script permite descargar audio o video de múltiples URLs de YouTube de forma automatizada. Puedes usar CSV o una interfaz gráfica para elegir formato, calidad y carpeta de salida.
+- Audio (`mp3`, `m4a`, `opus`, `wav`) o video (`mp4`, `mkv`, `webm`)
+- Entrada desde CSV (`url-list.csv`) o por argumentos
+- Archivo de configuración JSON opcional + overrides por CLI
+- Reintentos automáticos con backoff exponencial (solo para errores recuperables)
+- Clasificación de errores (403, geo-bloqueo, privado, eliminado, red, runtime JS…)
+- Salta archivos ya descargados (`skip_existing`)
+- Descarga en paralelo opcional (`parallel_downloads`)
+- GUI sin congelarse, con barra de progreso y botón Cancelar
+- Logging a consola y/o archivo
+- Embed opcional de metadatos y thumbnails
+- Detección automática de FFmpeg (PATH, env var `FFMPEG_PATH`, rutas comunes)
+- Tests unitarios en `tests/` (pytest)
 
-## 🔧 Requisitos Previos
+## Requisitos
 
-Antes de usar este script, necesitas tener instalado:
+- Python 3.10 o superior
+- FFmpeg (para conversión de audio y merge de video)
+- yt-dlp y tqdm (instalados vía `pip`)
 
-1. **Python 3.6 o superior**
-   - Verifica tu versión: `python --version`
+## Instalación
 
-2. **FFmpeg**
-   - El script detecta FFmpeg automáticamente (PATH o rutas comunes).
-   - Opcional: define `FFMPEG_PATH` si tu instalación no está en el PATH.
-   - Descarga FFmpeg desde: https://ffmpeg.org/download.html
+```bash
+pip install -r requirements.txt
+```
 
-3. **Librerías de Python**
-   - `yt-dlp`: Para descargar videos de YouTube
-   - `csv`: Incluida por defecto en Python
+Para tests:
 
-## 📦 Instalación
+```bash
+pip install pytest
+```
 
-1. **Clona o descarga este repositorio**
-
-2. **Instala las dependencias necesarias:**
-   ```bash
-   pip install yt-dlp
-   ```
-
-3. **Verifica que FFmpeg esté instalado y accesible:**
-   - Si no se detecta automáticamente, define la variable:
-   ```bash
-   set FFMPEG_PATH=C:\ruta\a\ffmpeg\bin\ffmpeg.exe
-   ```
-
-## 📁 Estructura del Proyecto
+## Estructura
 
 ```
 bajador-yt/
-├── bajador-yt.py      # Script principal
-├── app.py             # Interfaz gráfica
-├── yt_downloader.py   # Lógica de descarga
-├── url-list.csv       # Archivo CSV con las URLs de YouTube
-├── downloads/         # Carpeta donde se guardan los archivos descargados
-└── README.md          # Este archivo
+├── bajador_yt/              # Paquete principal
+│   ├── __init__.py
+│   ├── config.py            # DownloadConfig + load_config
+│   ├── constants.py         # formatos, calidades, modos
+│   ├── csv_utils.py         # lectura de CSV y texto
+│   ├── downloader.py        # núcleo: Downloader, reintentos, threading
+│   ├── errors.py            # clasificación de errores de yt-dlp
+│   ├── ffmpeg_utils.py      # detección y validación de FFmpeg
+│   ├── logger.py            # setup de logging
+│   ├── models.py            # DownloadResult
+│   └── validators.py        # URLs y parámetros
+├── bajador-yt.py            # CLI
+├── app.py                   # GUI
+├── bajador-yt-gui.bat       # Lanzador Windows para la GUI
+├── config.example.json      # Plantilla de configuración
+├── requirements.txt
+├── url-list.csv
+├── downloads/
+└── tests/                   # pytest
 ```
 
-## 📝 Configuración del Archivo CSV
+## Uso (CLI)
 
-El archivo `url-list.csv` debe tener el siguiente formato:
+```bash
+# URLs directas
+python bajador-yt.py --urls https://youtu.be/abc https://youtu.be/def
+
+# Desde CSV (columna "link")
+python bajador-yt.py --csv url-list.csv --output ./downloads
+
+# Video en mkv con metadatos y thumbnail embebidos
+python bajador-yt.py --urls https://youtu.be/abc \
+    --mode video --video-format mkv \
+    --write-metadata --embed-thumbnail
+
+# Audio 320 con 3 descargas en paralelo y 5 reintentos
+python bajador-yt.py --csv url-list.csv \
+    --mode audio --audio-format mp3 --audio-quality 320 \
+    --parallel 3 --retries 5
+
+# Cargar configuración desde JSON
+python bajador-yt.py --config config.json
+
+# Solo validar URLs sin descargar
+python bajador-yt.py --urls https://foo.com/x https://youtu.be/abc --validate-only
+
+# Modo verbose con log a archivo
+python bajador-yt.py --csv url-list.csv --verbose --log-file run.log
+```
+
+### Argumentos principales
+
+| Flag | Descripción |
+|------|-------------|
+| `--config FILE` | Carga `DownloadConfig` desde JSON |
+| `--csv FILE` | CSV con columna `link` |
+| `--urls URL [URL ...]` | URLs directas (aceptadas también con `--csv`) |
+| `--output DIR` | Carpeta de salida |
+| `--mode {audio,video}` | Tipo de descarga |
+| `--audio-format {mp3,m4a,opus,wav}` | |
+| `--audio-quality {128,192,256,320}` | |
+| `--video-format {mp4,mkv,webm}` | |
+| `--ffmpeg PATH` | Ruta explícita a FFmpeg |
+| `--parallel N` | Descargas concurrentes |
+| `--retries N` | Reintentos por URL |
+| `--retry-backoff X` | Factor exponencial (por defecto 2.0) |
+| `--skip-existing` / `--no-skip-existing` | Saltar archivos ya presentes |
+| `--allow-playlist` / `--no-playlist` | Permitir URLs de playlist |
+| `--write-metadata` | Embeber metadatos en el archivo |
+| `--embed-thumbnail` | Embeber thumbnail |
+| `--cookies-from-browser NAV` | Usa cookies del navegador (chrome, firefox, edge…) |
+| `--cookies-file PATH` | Archivo cookies.txt (formato Netscape) |
+| `--log-file FILE` | Escribir log en archivo |
+| `--verbose` | Nivel DEBUG |
+| `--validate-only` | Sólo validar URLs |
+| `--no-progress` | Deshabilitar tqdm (útil en CI) |
+
+### Códigos de salida
+
+| Código | Significado |
+|--------|-------------|
+| 0 | Todas las URLs procesadas sin errores |
+| 1 | Terminó con al menos un error |
+| 2 | Uso incorrecto / configuración inválida |
+
+## Uso (GUI)
+
+```bash
+python app.py
+```
+
+En Windows hay un lanzador: `bajador-yt-gui.bat`.
+
+La GUI permite:
+- Pegar varias URLs (una por línea)
+- Elegir carpeta de salida
+- Alternar audio/video, formato, calidad
+- Activar playlists, skip, metadatos, thumbnail
+- Ajustar paralelismo y reintentos
+- Ver progreso en tiempo real sin que la ventana se congele
+- **Cancelar** la descarga en curso
+
+![Captura de la interfaz](Capture.jpg)
+
+## Configuración (JSON)
+
+Copia `config.example.json` a `config.json` y edita:
+
+```json
+{
+  "output_folder": "./downloads",
+  "csv_file": "./url-list.csv",
+  "mode": "audio",
+  "audio_format": "mp3",
+  "audio_quality": "192",
+  "video_format": "mp4",
+  "ffmpeg_path": null,
+  "skip_existing": true,
+  "allow_playlist": false,
+  "max_retries": 3,
+  "retry_backoff": 2.0,
+  "parallel_downloads": 1,
+  "log_file": null,
+  "verbose": false,
+  "write_metadata": false,
+  "embed_thumbnail": false
+}
+```
+
+Los argumentos CLI tienen prioridad sobre los del JSON.
+
+## CSV de URLs
 
 ```csv
 link
 https://www.youtube.com/watch?v=VIDEO_ID_1
 https://www.youtube.com/watch?v=VIDEO_ID_2
-https://www.youtube.com/watch?v=VIDEO_ID_3
 ```
 
-**Importante:**
-- La primera fila debe contener el encabezado `link`
-- Cada URL debe estar en una nueva línea
-- Las URLs deben ser válidas de YouTube
+- La cabecera **debe** ser `link` (si falta, el CLI aborta con mensaje claro).
+- Una URL por línea.
 
-## 🚀 Uso (CLI con CSV)
+## API programática
 
-1. **Prepara tu archivo CSV:**
-   - Edita `url-list.csv` y agrega las URLs de los videos que deseas descargar
-
-2. **Ejecuta el script:**
-   ```bash
-   python bajador-yt.py
-   ```
-
-3. **Espera a que termine:**
-   - El script mostrará el progreso de cada descarga
-   - Los archivos se guardarán en la carpeta `downloads/`
-
-## 🖥️ Uso (Interfaz Gráfica)
-
-1. **Ejecuta la interfaz:**
-   ```bash
-   python app.py
-   ```
-
-2. **Pega una o varias URLs:**
-   - Una URL por línea
-
-3. **Define la carpeta de salida:**
-   - Por defecto: `./downloads`
-   - Puedes usar el botón **Examinar** para seleccionar una carpeta
-
-4. **Elige tipo de descarga:**
-   - `audio` o `video`
-
-5. **Si eliges audio, define formato y calidad:**
-   - Formatos: `mp3`, `m4a`, `opus`, `wav`
-   - Calidades: `128`, `192`, `256`, `320`
-
-6. **Si eliges video, define formato:**
-   - Formatos: `mp4`, `mkv`, `webm`
-
-7. **Opcional: FFmpeg**
-   - Puedes indicar la ruta al ejecutable `ffmpeg.exe`
-
-8. **Haz clic en "Descargar":**
-   - Verás el estado por URL en la lista
-   - El progreso se mostrará en la parte inferior
-
-9. **Opcional: Permitir playlists**
-   - Si activas el checkbox, las URLs de playlists descargan todos los videos
-
-![Captura de la interfaz](Capture.jpg)
-
-## ⚙️ Configuración del Script
-
-Puedes modificar las siguientes opciones en el script:
-
-### Cambiar la carpeta de descarga:
 ```python
-output_folder = './downloads'  # Línea 45
+from bajador_yt import DownloadConfig, Downloader
+
+config = DownloadConfig(output_folder='./out', mode='audio', audio_quality='320')
+downloader = Downloader(config)
+results = downloader.download_many([
+    'https://youtu.be/abc',
+    'https://youtu.be/def',
+])
+for r in results:
+    print(r.status, r.url, r.message)
 ```
 
-### Cambiar la calidad del audio:
-```python
-'preferredquality': '192',  # Línea 29
-# Opciones comunes: '128', '192', '256', '320'
-```
+## Tests
 
-### Cambiar el formato de salida:
-```python
-'preferredcodec': 'mp3',  # Línea 28
-# También puedes usar: 'm4a', 'opus', 'wav', etc.
-```
-
-### Cambiar la ubicación de FFmpeg:
 ```bash
-set FFMPEG_PATH=C:\ruta\a\ffmpeg\bin\ffmpeg.exe
+pytest
 ```
 
-## 📤 Resultado
+Los tests cubren validators, errors, csv_utils, ffmpeg_utils, config, models y el resumen del downloader. No hacen peticiones de red.
 
-Después de ejecutar el script, encontrarás los archivos descargados en la carpeta `downloads/`:
-- Audio: `[Título del Video].mp3` (o el formato elegido)
-- Video: `[Título del Video].mp4` (o el formato elegido)
+## Solución de problemas
 
-## ⚠️ Notas Importantes
+### `ERROR: [youtube] XXX: Please sign in` / `Login required` / restricción de edad
 
-1. **Respeto a los derechos de autor:**
-   - Solo descarga contenido que tengas permiso para descargar
-   - Respeta los términos de servicio de YouTube
+YouTube pide login (anti-bot). Solución: pasar cookies del navegador ya autenticado.
 
-2. **Límites de YouTube:**
-   - YouTube puede limitar las descargas si se realizan muchas en poco tiempo
-   - Si encuentras errores, espera unos minutos antes de intentar nuevamente
+**GUI:** en el combo **"Cookies navegador"** elige `chrome`, `firefox`, `edge`, `brave`, etc.
 
-3. **Espacios en nombres de archivo:**
-   - Los nombres se limpian automáticamente para evitar caracteres inválidos
+**CLI:**
+```bash
+py bajador-yt.py --urls https://youtu.be/XXX --cookies-from-browser chrome
+# o con un cookies.txt exportado:
+py bajador-yt.py --urls https://youtu.be/XXX --cookies-file ./cookies.txt
+```
 
-4. **Archivos existentes:**
-   - Si el archivo ya existe, se omite la descarga
+Cierra el navegador antes de ejecutar (Chrome/Firefox bloquean su base de cookies mientras están abiertos).
 
-5. **FFmpeg requerido:**
-   - El script necesita FFmpeg para convertir el audio a MP3
-   - Asegúrate de tener FFmpeg instalado y configurado correctamente
+### `HTTP Error 403: Forbidden` / `No supported JavaScript runtime`
 
-## 🐛 Solución de Problemas
+```bash
+pip install -U yt-dlp
+```
 
-### Error: "FFmpeg not found"
-- Verifica que FFmpeg esté instalado
-- Actualiza la ruta en la línea 25 del script
+Instala Node.js (o Deno) y añádelo al PATH. Más info: https://github.com/yt-dlp/yt-dlp/wiki/EJS
 
-### Error: "No module named 'yt_dlp'"
-- Instala la librería: `pip install yt-dlp`
+### `FFmpeg not found`
 
-### Errores 403 en YouTube o aviso de runtime JS
-- Mensajes típicos:
-  - `HTTP Error 403: Forbidden`
-  - `No supported JavaScript runtime could be found`
-- Causas habituales:
-  - Cambios internos de YouTube en cómo sirven el audio/video.
-  - Falta de un runtime de JavaScript soportado (Node, Deno, etc.).
-  - `yt-dlp` desactualizado.
-- Pasos recomendados:
-  1. Actualiza `yt-dlp`:
-     ```bash
-     pip install -U yt-dlp
-     ```
-  2. Instala **Node.js** (o Deno) y añádelo al `PATH`.
-  3. Vuelve a intentar la descarga; si el problema persiste, consulta la wiki de `yt-dlp`:
-     `https://github.com/yt-dlp/yt-dlp/wiki/EJS`
+Define la variable:
 
-### Error: "FileNotFoundError: url-list.csv"
-- Asegúrate de que el archivo `url-list.csv` exista en la misma carpeta que el script
+```bash
+# Linux/Mac
+export FFMPEG_PATH=/usr/local/bin/ffmpeg
 
-### Las descargas fallan
-- Verifica que las URLs sean válidas
-- Comprueba tu conexión a internet
-- Algunos videos pueden tener restricciones de descarga
+# Windows (PowerShell)
+$env:FFMPEG_PATH = "C:\ruta\a\ffmpeg\bin\ffmpeg.exe"
+```
 
-## 📄 Licencia
+O pásalo por CLI: `--ffmpeg "C:\ruta\a\ffmpeg.exe"`.
 
-Este script es de uso personal. Úsalo de manera responsable y respetando los términos de servicio de YouTube.
+### `No module named 'yt_dlp'`
 
-## 🤝 Contribuciones
+```bash
+pip install -r requirements.txt
+```
 
-Si encuentras algún problema o tienes sugerencias de mejora, siéntete libre de contribuir al proyecto.
+### `El CSV debe tener una columna 'link'`
+
+Revisa la cabecera de `url-list.csv`. Debe ser literalmente `link` en la primera fila.
+
+### Videos privados / eliminados / bloqueados por región
+
+El mensaje de error ahora indica la causa. Estos errores **no se reintentan** automáticamente.
+
+## Licencia
+
+Uso personal. Respeta los Términos de Servicio de YouTube y los derechos de autor.

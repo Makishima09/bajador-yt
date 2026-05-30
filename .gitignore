@@ -1,13 +1,20 @@
+# Medios descargados
 *.mp3
 *.ogg
 *.flac
 *.m4a
+*.opus
+*.wav
+*.mp4
+*.mkv
+*.webm
+downloads/
 
 # Logs
 *.log
 download_*.log
 
-# Configuración local
+# Configuración local (no commitear claves/paths privados)
 config.json
 
 # Python
@@ -19,8 +26,12 @@ __pycache__/
 env/
 venv/
 ENV/
-.venv
-*/.pyc
+.venv/
+.pytest_cache/
+.coverage
+htmlcov/
+.mypy_cache/
+.ruff_cache/
 
 # IDE
 .vscode/
@@ -31,3 +42,6 @@ ENV/
 # Sistema
 .DS_Store
 Thumbs.db
+
+# Claude Code
+.claude/
