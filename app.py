@@ -15,7 +15,7 @@ from pathlib import Path
 from tkinter import filedialog, messagebox, ttk
 from typing import Optional
 
-from bajador_yt import DownloadConfig, Downloader
+from bajador_yt import DownloadConfig, Downloader, __version__
 from bajador_yt.config import SUPPORTED_BROWSERS
 from bajador_yt.constants import AUDIO_FORMATS, MODES, QUALITY_LEVELS, VIDEO_FORMATS
 from bajador_yt.csv_utils import extract_links_from_text
@@ -30,7 +30,7 @@ POLL_INTERVAL_MS = 100
 class BajadorApp:
     def __init__(self, root: tk.Tk) -> None:
         self.root = root
-        self.root.title('Bajador YT — Descargas')
+        self.root.title(f'Bajador YT v{__version__} — Descargas')
         self.root.geometry('820x760')
         self.root.minsize(700, 680)
         self.root.resizable(True, True)
